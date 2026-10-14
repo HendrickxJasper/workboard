@@ -1,0 +1,33 @@
+<h1>Skills</h1>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% for repo in repos %}
+<div class="repo">
+  <div>
+    <b>{{ repo.name }}</b>
+    <span class="muted small">{{ repo.remote_url|default:repo.local_path }}</span>
+    <div class="muted small">
+      {% if repo.last_pulled_at %}Pulled {{ repo.last_pulled_at|date:"j M H:i" }} · {{ repo.last_pulled_commit|slice:":7" }}{% else %}Never pulled{% endif %}
+      {% if repo.last_error %} · <span class="error">{{ repo.last_error }}</span>{% endif %}
+    </div>
+  </div>
+  <button class="btn small" hx-post="{% url 'skill:pull' repo.pk %}" hx-target="#skills" hx-disabled-elt="this">
+    <span class="when-idle">Pull now</span><span class="when-busy">Pulling…</span>
+  </button>
+</div>
+{% empty %}
+<p class="muted">No skills repo configured. Set <code>SKILLS_REPO_URL</code> in <code>.env</code>.</p>
+{% endfor %}
+
+{% for category, skills in groups %}
+<section class="skill-group">
+  <h2>{{ category }}</h2>
+  <table class="table">
+    <thead><tr><th>Skill</th><th>Description</th><th>Used</th><th>Last used</th></tr></thead>
+    <tbody>
+    {% for s in skills %}
+      <tr><td><code>{{ s.slug }}</code></td><td class="desc">{{ s.description|truncatechars:220 }}</td><td>{{ s.usage_count }}</td><td>{{ s.last_used_at|date:"j M"|default:"–" }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endfor %}

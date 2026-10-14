@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Board{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <form class="filters" hx-get="{% url 'card:board' %}" hx-target="#board" hx-trigger="change" hx-push-url="true">
+    <div class="segmented" role="radiogroup" aria-label="Activity">
+      <label><input type="radio" name="state" value="" {% if not filters.state %}checked{% endif %}><span>All</span></label>
+      <label><input type="radio" name="state" value="running" {% if filters.state == "running" %}checked{% endif %}><span>Running</span></label>
+      <label><input type="radio" name="state" value="idle" {% if filters.state == "idle" %}checked{% endif %}><span>Idle</span></label>
+    </div>
+    <select name="client" aria-label="Client">
+      <option value="">All clients</option>
+      {% for c in clients %}<option value="{{ c.pk }}" {% if filters.client_id == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select>
+    <select name="source" aria-label="Source">
+      <option value="">All sources</option>
+      {% for value, label in sources %}<option value="{{ value }}" {% if filters.source == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </form>
+  {% include "card/partials/counters.html" %}
+</div>
+
+<div id="board" class="board">
+  {% include "card/partials/board.html" %}
+</div>
+
+<div id="drawer" {% if open_card %}hx-get="{% url 'card:detail' open_card %}" hx-trigger="load"{% endif %}></div>
+{% endblock %}

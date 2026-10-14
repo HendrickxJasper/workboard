@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>Log in</h1>
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% if form.errors %}<p class="error">Wrong username or password.</p>{% endif %}
+    <label>Username <input name="username" autofocus required></label>
+    <label>Password <input type="password" name="password" required></label>
+    <button class="btn primary">Log in</button>
+  </form>
+</div>
+{% endblock %}

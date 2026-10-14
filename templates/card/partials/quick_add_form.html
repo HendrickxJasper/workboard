@@ -1,0 +1,4 @@
+<form class="quick-add" hx-post="{% url 'card:new' %}" hx-target="#quick-add" hx-swap="innerHTML">
+  <input name="title" placeholder="Add a to-do…" aria-label="New to-do" autocomplete="off">
+  {% if error %}<p class="error small">{{ error }}</p>{% endif %}
+</form>

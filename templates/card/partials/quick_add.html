@@ -1,0 +1,4 @@
+{% include "card/partials/quick_add_form.html" %}
+{% if new_card %}
+<div hx-swap-oob="afterbegin:#col-inbox .column-cards">{% include "card/partials/card_face.html" with card=new_card %}</div>
+{% endif %}

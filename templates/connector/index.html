@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Connections{% endblock %}
+{% block content %}
+<div class="page">
+  <h1>Connections</h1>
+  <p class="muted">Sync runs every 5 minutes in the worker (<code>make worker</code>). Use “Sync now” to run it here and see errors straight away.</p>
+  <table class="table">
+    <thead><tr><th>Source</th><th>Status</th><th>Last sync</th><th>Cards</th><th></th></tr></thead>
+    <tbody>
+      {% for row in rows %}{% include "connector/partials/row.html" %}{% endfor %}
+      <tr>
+        <td><b>Claude</b></td>
+        <td>{% if claude_ready %}<span class="ok">Ready</span> · <code>{{ model }}</code>{% else %}<span class="error">ANTHROPIC_API_KEY not set</span>{% endif %}</td>
+        <td></td><td></td><td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

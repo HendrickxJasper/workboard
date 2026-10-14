@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+secrets/
+var/
+staticfiles/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/

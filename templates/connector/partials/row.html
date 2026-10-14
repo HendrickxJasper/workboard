@@ -1,0 +1,16 @@
+<tr id="conn-{{ row.conn.pk }}">
+  <td><b>{{ row.conn.name }}</b></td>
+  <td>
+    {% if not row.configured %}<span class="muted">Not configured</span>
+    {% elif row.conn.last_error %}<span class="error">{{ row.conn.last_error }}</span>
+    {% else %}<span class="ok">OK</span>{% endif %}
+    {% if stats and not stats.error %}<div class="small muted">{{ stats.upserted }} synced, {{ stats.changed }} changed{% if stats.closed %}, {{ stats.closed }} closed{% endif %}</div>{% endif %}
+  </td>
+  <td>{{ row.conn.last_sync_at|date:"j M H:i"|default:"never" }}</td>
+  <td>{{ row.cards }}</td>
+  <td>{% if row.configured %}
+    <button class="btn small" hx-post="{% url 'connector:sync' row.conn.pk %}" hx-target="#conn-{{ row.conn.pk }}" hx-swap="outerHTML" hx-disabled-elt="this">
+      <span class="when-idle">Sync now</span><span class="when-busy">Syncing…</span>
+    </button>{% endif %}
+  </td>
+</tr>

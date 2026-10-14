@@ -1,0 +1,37 @@
+[project]
+name = "workboard"
+version = "0.1.0"
+description = "Local, Claude-assisted work dashboard: one kanban over Odoo, Gmail and your to-dos."
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.2,<6",
+    "psycopg[binary]>=3.2",
+    "django-environ>=0.11",
+    "django-htmx>=1.19",
+    "procrastinate[django]>=3.0",
+    "anthropic>=0.40",
+    "httpx>=0.27",
+    "google-api-python-client>=2.130",
+    "google-auth-oauthlib>=1.2",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-django>=4.8", "ruff>=0.6"]
+
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["*/migrations/*", "static", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ"]
+ignore = ["DJ001", "E501"]  # line length is the formatter's job

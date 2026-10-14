@@ -1,0 +1,14 @@
+{% for col in columns %}
+<section class="column col-{{ col.key }}" id="col-{{ col.key }}">
+  <header class="column-head">
+    <h2>{{ col.label }}</h2>
+    <span class="column-count">{{ col.cards|length }}</span>
+  </header>
+  {% if col.key == "inbox" %}
+    <div id="quick-add">{% include "card/partials/quick_add_form.html" %}</div>
+  {% endif %}
+  <div class="column-cards" data-column="{{ col.key }}">
+    {% for card in col.cards %}{% include "card/partials/card_face.html" %}{% endfor %}
+  </div>
+</section>
+{% endfor %}

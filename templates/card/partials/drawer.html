@@ -1,0 +1,99 @@
+{% load workboard %}{% with state=card|activity %}
+<div class="drawer-backdrop" data-close-drawer></div>
+<aside class="drawer" aria-label="Card details"
+  {% if state == "running" %}hx-get="{% url 'card:detail' card.pk %}" hx-trigger="every 3s" hx-target="#drawer" hx-swap="innerHTML"{% endif %}>
+  <header class="drawer-head">
+    <div class="card-meta">
+      <span class="source source-{{ card.source }}">{{ card.get_source_display }}</span>
+      {% if card.client %}<span class="client">{{ card.client.name }}</span>{% endif %}
+      <span class="muted">{{ card.get_column_display }}</span>
+    </div>
+    <button class="icon-btn" data-close-drawer aria-label="Close">×</button>
+  </header>
+
+  <h2 class="drawer-title">{{ card.title }}</h2>
+  <div class="drawer-facts">
+    {% if state == "running" %}<span class="badge badge-running"><span class="pulse"></span>{{ card|running_label }}</span>
+    {% elif state == "idle" %}<span class="badge badge-idle">Idle {{ card|idle_days }}d</span>{% endif %}
+    <span>Urgency: <b>{{ card.get_urgency_display }}</b></span>
+    {% if card.ai_assist_score is not None %}<span>AI assist: <b>{{ card.ai_assist_score|score_dots }}</b></span>{% endif %}
+    {% if card.due_date %}<span>Due <b>{{ card.due_date|date:"j M Y" }}</b></span>{% endif %}
+    {% if card.external_url %}<a href="{{ card.external_url }}" target="_blank" rel="noopener">Open source ↗</a>{% endif %}
+  </div>
+
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+  {% if card.summary or card.next_step %}
+  <section class="drawer-section proposal">
+    {% if card.summary %}<p>{{ card.summary }}</p>{% endif %}
+    {% if card.next_step %}<p class="next-step-full"><span class="label">Next step</span>{{ card.next_step }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  {% if card.excerpt %}
+  <section class="drawer-section">
+    <h3>Content</h3>
+    <div class="excerpt">{{ card.raw.body|default:card.excerpt|truncatechars:3000 }}</div>
+  </section>
+  {% endif %}
+
+  <section class="drawer-section">
+    <div class="section-head">
+      <h3>Claude</h3>
+      {% if state != "running" %}
+      <button class="btn small" hx-post="{% url 'card:triage' card.pk %}" hx-target="#drawer">{% if runs %}Triage again{% else %}Triage{% endif %}</button>
+      {% endif %}
+    </div>
+    {% for run in runs %}
+      <div class="run run-{{ run.status }}">
+        <div class="run-head">
+          <b>{{ run.get_kind_display }}</b>
+          <span class="run-status">{{ run.get_status_display }}</span>
+          {% if run.is_active and run.current_step %}<span class="muted">· {{ run.current_step }}</span>{% endif %}
+          <span class="spacer"></span>
+          <span class="muted small">{{ run.created_at|date:"j M H:i" }}{% if run.input_tokens %} · {{ run.input_tokens|add:run.output_tokens }} tokens{% endif %}</span>
+        </div>
+        {% if run.error %}<p class="error small">{{ run.error }}</p>{% endif %}
+        {% with skills=run.skills_used.all %}{% if skills %}<p class="muted small">Skills: {% for s in skills %}{{ s.slug }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}{% endwith %}
+        {% with actions=run.actions.all %}
+        {% if actions %}
+          {% if run.status == "awaiting_approval" %}
+          <div class="run-actions-head">
+            <span class="muted small">Nothing happens until you approve.</span>
+            <button class="btn small primary" hx-post="{% url 'agent:approve_all' run.pk %}" hx-target="#drawer"
+              hx-confirm="Execute all open actions in order?">Approve all</button>
+          </div>
+          {% endif %}
+          {% for action in actions %}
+          <div class="action action-{{ action.status }}">
+            <div class="action-head">
+              <span class="action-type">{{ action.get_action_type_display }}</span>
+              <b>{{ action.title }}</b>
+              <span class="spacer"></span>
+              <span class="action-status">{{ action.get_status_display }}</span>
+            </div>
+            {% if action.depends_on %}<p class="muted small">After: {{ action.depends_on.title|default:action.depends_on }}</p>{% endif %}
+            {% if action.status == "executed" %}
+              <p class="small">{% if action.result.url %}<a href="{{ action.result.url }}" target="_blank" rel="noopener">Open result ↗</a>{% else %}Done{% endif %}</p>
+            {% elif action.status != "rejected" %}
+              <form hx-post="{% url 'agent:approve' action.pk %}" hx-target="#drawer">
+                <textarea name="payload" rows="8" spellcheck="false" aria-label="Payload">{{ action.payload|pretty_json }}</textarea>
+                {% if action.error %}<p class="error small">{{ action.error }}</p>{% endif %}
+                <div class="action-buttons">
+                  <button class="btn small primary">Approve</button>
+                  <button class="btn small" type="button" hx-post="{% url 'agent:reject' action.pk %}" hx-target="#drawer">Reject</button>
+                </div>
+              </form>
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% endif %}
+        {% endwith %}
+      </div>
+    {% empty %}
+      <p class="muted">No runs yet.</p>
+    {% endfor %}
+  </section>
+</aside>
+{% if oob_face %}{% include "card/partials/card_face.html" with oob=True %}{% endif %}
+{% endwith %}

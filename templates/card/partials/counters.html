@@ -1,0 +1,5 @@
+<div id="board-counters" class="counters" hx-get="{% url 'card:counters' %}" hx-trigger="every 10s" hx-swap="outerHTML">
+  <span class="counter running"><span class="pulse" aria-hidden="true"></span><b>{{ counters.running }}</b> running</span>
+  <span class="counter idle"><b>{{ counters.idle }}</b> idle</span>
+  <span class="counter approve"><b>{{ counters.to_approve }}</b> to approve</span>
+</div>

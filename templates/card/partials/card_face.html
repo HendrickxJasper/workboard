@@ -1,0 +1,24 @@
+{% load workboard %}{% with state=card|activity %}
+<article id="card-{{ card.pk }}" class="card state-{{ state }} urgency-{{ card.urgency }}" data-id="{{ card.pk }}"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+  {% if state == "running" %}hx-get="{% url 'card:face' card.pk %}" hx-trigger="every 3s [!document.body.classList.contains('dragging')]" hx-swap="outerHTML"{% endif %}>
+  <div class="card-meta">
+    <span class="source source-{{ card.source }}">{{ card.get_source_display }}</span>
+    {% if card.client %}<span class="client" title="{{ card.client.name }}">{{ card.client.name }}</span>{% endif %}
+    {% if card.urgency == "high" %}<span class="flag-high" title="High urgency">High</span>{% endif %}
+  </div>
+  <a class="card-title" href="{% url 'card:detail' card.pk %}" hx-get="{% url 'card:detail' card.pk %}" hx-target="#drawer">{{ card.title }}</a>
+  {% if card.next_step %}<p class="next-step">{{ card.next_step|truncatechars:140 }}</p>{% endif %}
+  <div class="card-foot">
+    {% if state == "running" %}
+      <span class="badge badge-running"><span class="pulse" aria-hidden="true"></span>{{ card|running_label }}</span>
+    {% elif state == "idle" %}
+      <span class="badge badge-idle">Idle {{ card|idle_days }}d</span>
+    {% endif %}
+    {% if card|pending_actions %}<span class="badge badge-approve">To approve</span>{% endif %}
+    <span class="spacer"></span>
+    {% if card.ai_assist_score is not None %}<span class="ai-score" title="AI can help: {{ card.ai_assist_score }}/3">AI {{ card.ai_assist_score|score_dots }}</span>{% endif %}
+    {% if card.due_date %}<span class="due" title="Due date">{{ card.due_date|date:"j M" }}</span>{% endif %}
+  </div>
+</article>
+{% endwith %}

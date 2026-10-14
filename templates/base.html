@@ -1,0 +1,28 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Workboard{% endblock %} · {{ company_name }}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+  <script src="{% static 'vendor/Sortable.min.js' %}" defer></script>
+  <script src="{% static 'js/board.js' %}" defer></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <header class="topbar">
+    <a class="brand" href="{% url 'card:board' %}"><span class="brand-mark"></span>{{ company_name }} <span class="brand-sub">workboard</span></a>
+    {% if user.is_authenticated %}
+    <nav>
+      {% url 'card:board' as board_url %}{% url 'connector:index' as conn_url %}{% url 'skill:index' as skills_url %}
+      <a href="{{ board_url }}" {% if request.path == board_url %}aria-current="page"{% endif %}>Board</a>
+      <a href="{{ conn_url }}" {% if request.path == conn_url %}aria-current="page"{% endif %}>Connections</a>
+      <a href="{{ skills_url }}" {% if request.path == skills_url %}aria-current="page"{% endif %}>Skills</a>
+      <a href="{% url 'admin:index' %}">Admin</a>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="linklike">Log out</button></form>
+    </nav>
+    {% endif %}
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>
