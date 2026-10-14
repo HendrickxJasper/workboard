@@ -1,0 +1,25 @@
+# Office server (Proxmox VM), reached over Tailscale.
+# kamal-proxy runs without TLS here: either you open it only over Tailscale, or
+# Cloudflare Tunnel terminates TLS in front of it (see README, "Reaching it from anywhere").
+servers:
+  web:
+    hosts:
+      - CHANGE-ME-office-vm       # Tailscale hostname of the Docker VM
+  worker:
+    hosts:
+      - CHANGE-ME-office-vm
+    cmd: python manage.py procrastinate worker
+
+proxy:
+  ssl: false
+  host: workboard.CHANGE-ME.ts.net   # the name you will open in the browser
+
+env:
+  clear:
+    ALLOWED_HOSTS: workboard.CHANGE-ME.ts.net
+    CSRF_TRUSTED_ORIGINS: https://workboard.CHANGE-ME.ts.net,http://workboard.CHANGE-ME.ts.net
+    SECURE_COOKIES: "false"         # set "true" once it is only served over https
+
+accessories:
+  db:
+    host: CHANGE-ME-office-vm

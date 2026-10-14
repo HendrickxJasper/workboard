@@ -1,3 +1,27 @@
+# Full stack on one machine: Postgres, web (gunicorn on :8000) and the worker.
+# Same image and entrypoint as the Kamal deploy, so what runs here runs on the server.
+
+x-app: &app
+  build: .
+  image: workboard:local
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    # These win over .env so container paths and the db host are always right.
+    DATABASE_URL: postgres://postgres:postgres@db:5432/workboard
+    DEBUG: "false"
+    GMAIL_TOKEN_FILE: /app/data/gmail_token.json
+    GMAIL_CREDENTIALS_FILE: /app/secrets/gmail_client.json
+    SKILLS_REPO_PATH: /app/data/skills
+  volumes:
+    - data:/app/data                # Gmail token, skills clone
+    - ./secrets:/app/secrets:ro     # gmail_client.json, only needed for `make gmail-auth`
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+
 services:
   db:
     image: postgres:16
@@ -6,9 +30,30 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"       # for the venv dev setup; not exposed beyond this machine
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d workboard"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  web:
+    <<: *app
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  worker:
+    <<: *app
+    command: ["python", "manage.py", "procrastinate", "worker"]
 
 volumes:
   pgdata:
+  data:

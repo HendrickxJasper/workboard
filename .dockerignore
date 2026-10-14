@@ -1,0 +1,15 @@
+.git
+.venv
+.env
+.env.*
+!.env.example
+secrets/
+var/
+staticfiles/
+**/__pycache__
+.pytest_cache
+.ruff_cache
+*.egg-info
+build/
+docs/*.png
+.kamal/

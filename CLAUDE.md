@@ -3,9 +3,16 @@
 Local Django + HTMX kanban over Odoo, Gmail and to-dos, with Claude triage. Read `docs/analysis/workboard.md` first: it has the data model, the numbered business rules (R1–R13) and the v1 deviations.
 
 ## Commands
-- `make up` (Postgres in Docker), `make run`, `make worker`
-- `make migrations`, `make migrate`, `make shell`, `make seed` (demo data)
+- Docker (full stack, same image as the server): `make up`, `make logs`, `make seed`, `make sync`, `make shell`, `make gmail-auth`
+- Local Python (development): `make install`, `make db` (Postgres only), `make run`, `make worker`, `make migrations`, `make migrate`
 - `make test` and `make lint` must pass before you say you are done.
+- After changing dependencies in `pyproject.toml`, run `make lock` and commit `requirements.lock` (the Dockerfile installs from it).
+
+## Deployment
+- One image, two roles: web (gunicorn, default CMD) and worker (`python manage.py procrastinate worker`). `bin/docker-entrypoint` migrates only for web.
+- Kamal config: `config/deploy.yml` + `config/deploy.office.yml`, secrets via `.kamal/secrets` (env vars only). Ask before any `kamal` command against a real destination.
+- Persistent state outside Postgres lives in `/app/data` (Gmail token, skills clone). Don't write anywhere else at runtime.
+- `/healthz` is answered by `core.middleware.HealthCheckMiddleware` before host and login checks. Keep it first in MIDDLEWARE.
 
 ## Conventions
 - Apps per domain: `connector`, `card`, `agent`, `skill`. Every model inherits `core.BaseModel`.

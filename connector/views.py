@@ -1,11 +1,10 @@
-from pathlib import Path
-
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
 from . import services
+from .gmail import gmail_configured
 from .models import Connection
 
 
@@ -14,7 +13,7 @@ def _rows():
     services.get_connection(Connection.Kind.GMAIL)
     configured = {
         "odoo": bool(settings.ODOO_URL and settings.ODOO_API_KEY),
-        "gmail": Path(settings.GMAIL_TOKEN_FILE).exists(),
+        "gmail": gmail_configured(),
     }
     return [
         {"conn": c, "configured": configured.get(c.kind, False), "cards": c.cards.count()}

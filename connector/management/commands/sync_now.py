@@ -1,9 +1,8 @@
-from pathlib import Path
-
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from connector import services
+from connector.gmail import gmail_configured
 from skill import services as skill_services
 
 
@@ -15,7 +14,7 @@ class Command(BaseCommand):
             self.stdout.write(f"Odoo:   {services.sync_odoo()}")
         else:
             self.stdout.write("Odoo:   not configured")
-        if Path(settings.GMAIL_TOKEN_FILE).exists():
+        if gmail_configured():
             self.stdout.write(f"Gmail:  {services.sync_gmail()}")
         else:
             self.stdout.write("Gmail:  not authorised (make gmail-auth)")

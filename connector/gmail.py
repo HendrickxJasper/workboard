@@ -73,7 +73,7 @@ class GmailClient:
     @classmethod
     def from_settings(cls) -> GmailClient:
         token = Path(settings.GMAIL_TOKEN_FILE)
-        if not token.exists():
+        if not gmail_configured():
             raise GmailError("Gmail is not authorised yet. Run `make gmail-auth`.")
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials
@@ -114,6 +114,17 @@ class GmailClient:
             "draft_id": draft["id"],
             "url": f"https://mail.google.com/mail/u/0/#drafts?compose={draft['id']}",
         }
+
+
+def gmail_configured() -> bool:
+    """True when a token file exists. On a server, GMAIL_TOKEN_JSON seeds that file once;
+    after that the file wins, because it holds the refreshed token."""
+    token = Path(settings.GMAIL_TOKEN_FILE)
+    if not token.exists() and settings.GMAIL_TOKEN_JSON.strip():
+        token.parent.mkdir(parents=True, exist_ok=True)
+        token.write_text(settings.GMAIL_TOKEN_JSON.strip())
+        token.chmod(0o600)
+    return token.exists()
 
 
 def thread_url(thread_id: str) -> str:

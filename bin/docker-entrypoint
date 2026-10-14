@@ -1,0 +1,14 @@
+#!/bin/sh
+# Web containers migrate before serving; a failing migration stops the rollout.
+# The worker never migrates, so two containers never race on the schema.
+set -e
+
+if [ "$1" = "gunicorn" ]; then
+  python manage.py migrate --noinput
+  # Optional first login on a fresh server: set DJANGO_SUPERUSER_USERNAME/_PASSWORD/_EMAIL.
+  if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+    python manage.py createsuperuser --noinput 2>/dev/null || true
+  fi
+fi
+
+exec "$@"

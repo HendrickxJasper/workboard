@@ -28,7 +28,7 @@ def sync_odoo_periodic(timestamp: int):
 @app.periodic(cron="*/5 * * * *", periodic_id="sync_gmail")
 @app.task(queueing_lock="sync_gmail_periodic", name="connector.sync_gmail_periodic")
 def sync_gmail_periodic(timestamp: int):
-    from pathlib import Path
+    from .gmail import gmail_configured
 
-    if Path(settings.GMAIL_TOKEN_FILE).exists():
+    if gmail_configured():
         sync_gmail()

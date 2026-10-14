@@ -1,0 +1,65 @@
+# Kamal 2 shared config. Hosts, proxy host and per-environment env live in
+# config/deploy.<destination>.yml. Deploy with: kamal deploy -d office
+service: workboard
+image: hendrickxjasper/workboard
+
+registry:
+  server: ghcr.io
+  username: hendrickxjasper
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
+
+proxy:
+  app_port: 8000
+  healthcheck:
+    path: /healthz
+    interval: 3
+    timeout: 5
+
+# Gmail token and the skills clone survive deploys.
+volumes:
+  - workboard_data:/app/data
+
+env:
+  clear:
+    DEBUG: "false"
+    BEHIND_PROXY: "true"
+    TIME_ZONE: Europe/Brussels
+    WORKBOARD_COMPANY_NAME: Scrollit
+    WORKBOARD_USER_NAME: Jasper
+    IDLE_AFTER_DAYS: "3"
+    AUTO_TRIAGE: "true"
+    CLAUDE_MODEL: claude-sonnet-5-5
+    ODOO_URL: https://CHANGE-ME.odoo.com
+    ODOO_DB: CHANGE-ME
+    ODOO_LOGIN: jasper.hendrickx@scrollit.be
+    ODOO_SUPPORT_TEAM_ID: ""         # helpdesk.team id for misrouted support mails
+    GMAIL_QUERY: in:inbox -category:promotions -category:social newer_than:14d
+    SKILLS_REPO_NAME: Scrollit Skills
+    SKILLS_REPO_URL: https://github.com/scrollit/claude-skills
+    DJANGO_SUPERUSER_USERNAME: jasper
+    DJANGO_SUPERUSER_EMAIL: jasper.hendrickx@scrollit.be
+  secret:
+    - SECRET_KEY
+    - DATABASE_URL
+    - ODOO_API_KEY
+    - ANTHROPIC_API_KEY
+    - GMAIL_TOKEN_JSON
+    - SKILLS_REPO_TOKEN
+    - DJANGO_SUPERUSER_PASSWORD
+
+accessories:
+  db:
+    image: postgres:16
+    # host is set per destination
+    env:
+      clear:
+        POSTGRES_DB: workboard
+        POSTGRES_USER: workboard
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data

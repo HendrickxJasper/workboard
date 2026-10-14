@@ -2,9 +2,11 @@
 __pycache__/
 *.pyc
 .env
-secrets/
+secrets/*
+!secrets/.gitkeep
 var/
 staticfiles/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+.lockvenv/

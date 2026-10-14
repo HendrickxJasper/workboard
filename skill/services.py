@@ -8,7 +8,9 @@ plain <category>/<skill>/SKILL.md folders. Category comes from the frontmatter
 
 from __future__ import annotations
 
+import base64
 import hashlib
+import os
 import subprocess
 from pathlib import Path
 
@@ -47,8 +49,25 @@ def ensure_repo_from_settings() -> SkillRepo | None:
     return repo
 
 
+def _auth_args() -> list[str]:
+    """Per-call auth header for a private HTTPS repo. Keeps the token out of the URL,
+    the clone's .git/config and the database."""
+    token = settings.SKILLS_REPO_TOKEN
+    if not token:
+        return []
+    basic = base64.b64encode(f"x-access-token:{token}".encode()).decode()
+    return ["-c", f"http.extraHeader=Authorization: Basic {basic}"]
+
+
+def _run_git(args: list[str], timeout: int) -> subprocess.CompletedProcess:
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}  # fail fast instead of waiting for a password
+    return subprocess.run(
+        ["git", *_auth_args(), *args], capture_output=True, text=True, timeout=timeout, env=env
+    )
+
+
 def _git(root: Path, *args: str) -> str:
-    proc = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, timeout=300)
+    proc = _run_git(["-C", str(root), *args], timeout=300)
     if proc.returncode != 0:
         raise SkillRepoError(proc.stderr.strip() or proc.stdout.strip() or f"git {' '.join(args)} failed")
     return proc.stdout.strip()
@@ -62,12 +81,7 @@ def pull_repo(repo: SkillRepo) -> SkillRepo:
                 raise SkillRepoError(f"{root} is not a git repo and no remote URL is set.")
             root.parent.mkdir(parents=True, exist_ok=True)
             branch = ["--branch", repo.default_branch] if repo.default_branch else []
-            proc = subprocess.run(
-                ["git", "clone", *branch, repo.remote_url, str(root)],
-                capture_output=True,
-                text=True,
-                timeout=600,
-            )
+            proc = _run_git(["clone", *branch, repo.remote_url, str(root)], timeout=600)
             if proc.returncode != 0:
                 raise SkillRepoError(proc.stderr.strip())
         else:
